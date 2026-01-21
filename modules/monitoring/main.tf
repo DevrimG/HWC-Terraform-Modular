@@ -26,7 +26,7 @@ resource "huaweicloud_vpc_flow_log" "log-vpc0-flow" {
   log_stream_id = huaweicloud_lts_stream.log-stream0-network.id
 }
 
-# Monitoring (Empty/Commented placeholder)
+# Monitoring 
 # Prometheus Instance
 resource "huaweicloud_aom_prom_instance" "prom_instance" {
   count                 = var.enable_aom_prometheus ? 1 : 0

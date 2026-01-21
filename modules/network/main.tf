@@ -490,21 +490,151 @@ resource "huaweicloud_vpc_eip" "eip_elb0" {
 #   destination_port       = "22"
 # }
 
-### Enterprise Router & Routes (Commented) ###
-# Content from er.tf and er.rtb.tf would go here if active, but they are fully commented out.
-# I will include them commented for completeness if needed, but since they are commented out in source,
-# and this is a refactor, I will omit the huge block of commented ER code unless it's necessary.
-# Just to be safe and clean, I will skip the ER blocks as they are inactive code.
-# The user can restore them from git history.
-# Wait, user asked to "switch to module based", not "clean up code".
-# If I delete them, I change the content.
-# I will append the ER stuff (commented) to be safe.
+### Enterprise Router & Routes ###
 
-# resource "huaweicloud_er_instance" "er0_instance" {
-#   ....
-# }
-# (Abbreviated for tool call, but I should have put it in if I wanted full fidelity. 
-# Re-reading er.tf, it is 100% commented out. I'll leave it as a note).
+resource "huaweicloud_er_instance" "er0_instance" {
+  count                          = var.enable_enterprise_router ? 1 : 0
+  availability_zones             = [local.az1_id, local.az2_id]
+  name                           = var.er0_name
+  asn                            = var.bgp_asn0
+  enterprise_project_id          = var.enterprise_project_id
+  enable_default_propagation     = false
+  enable_default_association     = false
+  auto_accept_shared_attachments = true
+}
+
+# VPC Attachments
+resource "huaweicloud_er_vpc_attachment" "er0_attach_vpc0" {
+  count                  = var.enable_enterprise_router ? 1 : 0
+  instance_id            = huaweicloud_er_instance.er0_instance[0].id
+  vpc_id                 = huaweicloud_vpc.vpc0_devrim.id
+  subnet_id              = huaweicloud_vpc_subnet.snet_eric_vpc0[0].id
+  name                   = local.er0_attach_vpc0
+  auto_create_vpc_routes = true
+}
+
+resource "huaweicloud_er_vpc_attachment" "er0_attach_vpc1" {
+  count                  = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  instance_id            = huaweicloud_er_instance.er0_instance[0].id
+  vpc_id                 = huaweicloud_vpc.vpc1_devrim[0].id
+  subnet_id              = huaweicloud_vpc_subnet.snet_eric_vpc1[0].id
+  name                   = local.er0_attach_vpc1
+  auto_create_vpc_routes = true
+}
+
+resource "huaweicloud_er_vpc_attachment" "er0_attach_vpc2" {
+  count                  = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  instance_id            = huaweicloud_er_instance.er0_instance[0].id
+  vpc_id                 = huaweicloud_vpc.vpc2_devrim[0].id
+  subnet_id              = huaweicloud_vpc_subnet.snet_eric_vpc2[0].id
+  name                   = local.er0_attach_vpc2
+  auto_create_vpc_routes = true
+}
+
+# Route Tables
+resource "huaweicloud_er_route_table" "rtb0_er0" {
+  count       = var.enable_enterprise_router ? 1 : 0
+  instance_id = huaweicloud_er_instance.er0_instance[0].id
+  name        = local.rtb0_er0
+  description = "Route table for Alpha VPC"
+}
+
+resource "huaweicloud_er_route_table" "rtb1_er0" {
+  count       = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  instance_id = huaweicloud_er_instance.er0_instance[0].id
+  name        = local.rtb1_er0
+  description = "Route table for Beta VPC"
+}
+
+resource "huaweicloud_er_route_table" "rtb2_er0" {
+  count       = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  instance_id = huaweicloud_er_instance.er0_instance[0].id
+  name        = local.rtb2_er0
+  description = "Route table for Network VPC"
+}
+
+# Associations - Link attachments to route tables
+resource "huaweicloud_er_association" "rtb0_assoc_vpc0" {
+  count          = var.enable_enterprise_router ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc0[0].id
+}
+
+resource "huaweicloud_er_association" "rtb1_assoc_vpc1" {
+  count          = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb1_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc1[0].id
+}
+
+resource "huaweicloud_er_association" "rtb2_assoc_vpc2" {
+  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb2_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
+}
+
+# Propagations - Propagate routes from attachments to route tables
+# Alpha RTB learns routes from Beta and Network
+resource "huaweicloud_er_propagation" "rtb0_prop_vpc1" {
+  count          = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc1[0].id
+}
+
+resource "huaweicloud_er_propagation" "rtb0_prop_vpc2" {
+  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
+}
+
+# Beta RTB learns routes from Alpha and Network
+resource "huaweicloud_er_propagation" "rtb1_prop_vpc0" {
+  count          = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb1_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc0[0].id
+}
+
+resource "huaweicloud_er_propagation" "rtb1_prop_vpc2" {
+  count          = var.enable_enterprise_router && var.enable_vpc_beta && var.enable_vpc_net ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb1_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
+}
+
+# Network RTB learns routes from Alpha and Beta
+resource "huaweicloud_er_propagation" "rtb2_prop_vpc0" {
+  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb2_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc0[0].id
+}
+
+resource "huaweicloud_er_propagation" "rtb2_prop_vpc1" {
+  count          = var.enable_enterprise_router && var.enable_vpc_beta && var.enable_vpc_net ? 1 : 0
+  instance_id    = huaweicloud_er_instance.er0_instance[0].id
+  route_table_id = huaweicloud_er_route_table.rtb2_er0[0].id
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc1[0].id
+}
+
+# Static Route - Default route to Network VPC for internet egress via NAT
+resource "huaweicloud_er_static_route" "rtb0_default_to_net" {
+  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
+  destination    = "0.0.0.0/0"
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
+}
+
+resource "huaweicloud_er_static_route" "rtb1_default_to_net" {
+  count          = var.enable_enterprise_router && var.enable_vpc_beta && var.enable_vpc_net ? 1 : 0
+  route_table_id = huaweicloud_er_route_table.rtb1_er0[0].id
+  destination    = "0.0.0.0/0"
+  attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
+}
 
 
 ### Load Balancer (from load.balancer.tf) ###

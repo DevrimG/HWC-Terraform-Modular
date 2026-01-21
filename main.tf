@@ -21,10 +21,6 @@ module "network" {
   name = var.name
   env  = var.env
 
-  # Pass other variables if needed or rely on defaults/root variables
-  # The network module variables.tf defines defaults for cidrs etc.
-  # If root variables override them, pass them here.
-  # For now, I assume root vars structure matches or I pass explicit mappings.
 
   enterprise_project_id = var.enterprise_project_id
   domain                = var.domain
@@ -104,7 +100,7 @@ module "cce" {
   security_group_id    = module.network.secgroup_public0_id
 
   password = var.password
-  # swr_user = var.swr_user # Assume defined
+  # swr_user = var.swr_user 
   # swr_password = var.swr_password
 
   # Feature Flags
@@ -127,7 +123,6 @@ module "compute" {
 
   eip_ecs0_vpc0_address = module.network.eip_ecs0_vpc0_address
 
-  # eip_ecs_gpu_address = ??? (Not in network outputs yet? I need to check network outputs)
 
   # Feature Flags
   enable_ecs_ubuntu = var.enable_ecs_ubuntu
