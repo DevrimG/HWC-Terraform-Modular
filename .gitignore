@@ -1,0 +1,13 @@
+vars.secrets.tf
+.tf.backend.hcl
+secrets.auto.tfvars
+.DS_Store
+*.plan
+*.tfvars
+
+.terraform/
+*.tfstate
+*.tfstate.*
+
+tfplan*
+*.plan
