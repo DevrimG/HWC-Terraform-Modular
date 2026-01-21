@@ -100,8 +100,6 @@ module "cce" {
   security_group_id    = module.network.secgroup_public0_id
 
   password = var.password
-  # swr_user = var.swr_user 
-  # swr_password = var.swr_password
 
   # Feature Flags
   enable_cce_cluster   = var.enable_cce_cluster
@@ -166,8 +164,13 @@ module "monitoring" {
 }
 
 module "storage" {
-  source                = "./modules/storage"
+  source = "./modules/storage"
+
+  name                  = var.name
   enterprise_project_id = var.enterprise_project_id
+
+  # Feature Flags
+  enable_obs_bucket = var.enable_obs_bucket
 }
 
 module "functiongraph" {

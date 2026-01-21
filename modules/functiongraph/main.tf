@@ -25,9 +25,4 @@ resource "huaweicloud_fgs_function" "fg_blender_app" {
   handler = "-"
   agency  = "fgs_default_agency"
 
-  # log_group_id    = var.log_group_id
-  # log_stream_id   = var.log_stream_id
-  # log_group_name  = var.log_group_name
-  # log_stream_name = var.log_stream_name
-
 }

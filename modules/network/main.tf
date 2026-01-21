@@ -435,60 +435,33 @@ resource "huaweicloud_vpc_eip" "eip_elb0" {
   }
 }
 
-# resource "huaweicloud_vpc_eip" "eip_domain" {
-#   name        = "eip-${var.name}-domain"
-#   enterprise_project_id = var.enterprise_project_id
-#   tags = {
-#     Owner = var.name
-#     }
 
-#   publicip {
-#     ip_address = "213.250.128.248"
-#     type = "5_bgp"
-#   }
 
-#   bandwidth {
-#     name        = "bandwidth-${var.name}-domain"
-#     size        = 300
-#     share_type  = "PER"
-#     charge_mode = "traffic"
-#   }
-# }
+### Network ACL ###
 
-### Network ACL (Commented) ###
+resource "huaweicloud_network_acl" "acl_default" {
+  count = var.enable_network_acl ? 1 : 0
+  name  = local.nacl_name0
 
-# resource "huaweicloud_network_acl" "acl_default" {
-#   name = local.nacl_name0
+  subnets = [
+    huaweicloud_vpc_subnet.snet_pub0_vpc0.id
+  ]
 
-#   subnets = [
-#     huaweicloud_vpc_subnet.snet_pub0_vpc0.id
-#   ]
+  inbound_rules = [
+    huaweicloud_network_acl_rule.acl_rule_default[0].id
+  ]
+}
 
-#   inbound_rules = [
-#     huaweicloud_network_acl_rule.acl_rule_default.id,
-#     huaweicloud_network_acl_rule.acl_rule_personal.id
-#   ]
-# }
-
-# resource "huaweicloud_network_acl_rule" "acl_rule_default" {
-#   name                   = local.nacl_rule0_name
-#   protocol               = "tcp"
-#   action                 = "allow"
-#   source_ip_address      = huaweicloud_vpc.vpc0_devrim.cidr
-#   source_port            = "8080"
-#   destination_ip_address = "0.0.0.0/0"
-#   destination_port       = "8081"
-# }
-
-# resource "huaweicloud_network_acl_rule" "acl_rule_personal" {
-#   name                   = local.nacl_rule1_name
-#   protocol               = "tcp"
-#   action                 = "allow"
-#   source_ip_address      = huaweicloud_vpc.vpc0_devrim.cidr
-#   source_port            = "22"
-#   destination_ip_address = var.sg_personal_ip
-#   destination_port       = "22"
-# }
+resource "huaweicloud_network_acl_rule" "acl_rule_default" {
+  count                  = var.enable_network_acl ? 1 : 0
+  name                   = local.nacl_rule0_name
+  protocol               = "tcp"
+  action                 = "allow"
+  source_ip_address      = huaweicloud_vpc.vpc0_devrim.cidr
+  source_port            = "8080"
+  destination_ip_address = "0.0.0.0/0"
+  destination_port       = "8081"
+}
 
 ### Enterprise Router & Routes ###
 

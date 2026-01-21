@@ -27,13 +27,11 @@ resource "huaweicloud_cce_cluster" "cce-cluster0" {
 
   enterprise_project_id = var.enterprise_project_id
   authentication_mode   = "rbac"
-  # eip                    = huaweicloud_vpc_eip.eip_cce.address
 
   masters {
     availability_zone = local.az1_id
   }
 }
-# 
 
 
 
@@ -64,7 +62,6 @@ data "huaweicloud_compute_flavors" "medium_flavour" {
   cpu_core_count    = 8
   memory_size       = 16
 }
-# 
 
 
 resource "huaweicloud_cce_node_pool" "cce_spot_pool" {
@@ -100,17 +97,16 @@ resource "huaweicloud_cce_node_pool" "cce_spot_pool" {
   }
 }
 
-### Addons (from cce.turbo.addons.tf) ###
+### CCE Addons ###
 
-# # data "huaweicloud_cce_addon_template" "template_metrics_server" {
-# #   cluster_id    = huaweicloud_cce_cluster.cce-cluster0.id
-# #   name          = "metrics-server"
-# #   version       = "1.3.90"
-# # }
-# # resource "huaweicloud_cce_addon" "addon_metrics_server" {
-# #   cluster_id    = huaweicloud_cce_cluster.cce-cluster0.id
-# #   template_name = "metrics-server"
-# # }
+resource "huaweicloud_cce_addon" "addon_metrics_server" {
+  count         = (var.enable_cce_cluster && var.enable_cce_node_pool) ? 1 : 0
+  cluster_id    = huaweicloud_cce_cluster.cce-cluster0[0].id
+  template_name = "metrics-server"
+  version       = "1.3.90"
+
+  depends_on = [huaweicloud_cce_node_pool.cce_spot_pool]
+}
 
 ### Autopilot (from cce.autopilot.tf) ###
 

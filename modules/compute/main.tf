@@ -37,11 +37,8 @@ resource "huaweicloud_compute_instance" "ecs0_vpc0" {
     Owner = var.name
   }
 
-  flavor_id = element(data.huaweicloud_compute_flavors.small_flavour.ids, 0)
-  # flavor_id = "p3s.2xlarge.8"
-  image_id = var.img_terminal
-  # image_id = var.img_ubuntu
-  # admin_pass = var.password
+  flavor_id     = element(data.huaweicloud_compute_flavors.small_flavour.ids, 0)
+  image_id      = var.img_terminal
   key_pair      = "KeyPair-Devrim"
   charging_mode = var.ppu
 

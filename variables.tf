@@ -344,9 +344,6 @@ variable "pgsql_port" {
   default = "5432"
 }
 
-# --- Secrets (Placeholder for vars.secrets.tf contents, usually sensitive) ---
-# variable "additional_secrets" { ... }
-
 # --- Storage / Versions ---
 
 variable "redis_version" {
@@ -383,6 +380,12 @@ variable "enable_function_blender" { default = false }
 variable "enable_aom_prometheus" {
   type    = bool
   default = false
+}
+
+variable "enable_obs_bucket" {
+  description = "Enable OBS Bucket creation"
+  type        = bool
+  default     = false
 }
 
 # Network Feature Flags
