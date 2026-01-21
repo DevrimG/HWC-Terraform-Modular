@@ -117,10 +117,10 @@ module "compute" {
   password              = var.password
 
   snet_pub0_vpc0_id = module.network.snet_pub0_vpc0_id
+  snet_pub0_vpc1_id = module.network.snet_pub0_vpc1_id
   security_group_id = module.network.secgroup_public0_id
 
   eip_ecs0_vpc0_address = module.network.eip_ecs0_vpc0_address
-
 
   # Feature Flags
   enable_ecs_ubuntu = var.enable_ecs_ubuntu

@@ -297,7 +297,7 @@ resource "huaweicloud_networking_secgroup_rule" "allow_vpc2" {
 ### NAT Gateway & SNAT ###
 
 resource "huaweicloud_nat_gateway" "nat_gw0" {
-  count                 = var.enable_nat_gateway ? 1 : 0
+  count                 = (var.enable_nat_gateway && var.enable_vpc_net) ? 1 : 0
   name                  = local.natgw0_name
   spec                  = "1"
   vpc_id                = huaweicloud_vpc.vpc2_devrim[0].id
@@ -306,22 +306,22 @@ resource "huaweicloud_nat_gateway" "nat_gw0" {
 }
 
 resource "huaweicloud_nat_snat_rule" "snat_1" {
-  count          = var.enable_nat_gateway ? 1 : 0
+  count          = (var.enable_nat_gateway && var.enable_vpc_net && var.enable_eip_nat) ? 1 : 0
   nat_gateway_id = huaweicloud_nat_gateway.nat_gw0[0].id
   subnet_id      = huaweicloud_vpc_subnet.snet_pub0_vpc2[0].id
   floating_ip_id = huaweicloud_vpc_eip.eip_nat[0].id
 }
 
 resource "huaweicloud_nat_snat_rule" "snat_dc_vpc0" {
-  count          = var.enable_nat_gateway ? 1 : 0
+  count          = (var.enable_nat_gateway && var.enable_vpc_net && var.enable_eip_nat) ? 1 : 0
   nat_gateway_id = huaweicloud_nat_gateway.nat_gw0[0].id
   cidr           = var.vpc0_cidr
   floating_ip_id = huaweicloud_vpc_eip.eip_nat[0].id
-  source_type    = 1 # 1 for Direct Connect, default (0) is VPC
+  source_type    = 1
 }
 
 resource "huaweicloud_nat_snat_rule" "snat_dc_vpc1" {
-  count          = var.enable_nat_gateway ? 1 : 0
+  count          = (var.enable_nat_gateway && var.enable_vpc_net && var.enable_vpc_beta && var.enable_eip_nat) ? 1 : 0
   nat_gateway_id = huaweicloud_nat_gateway.nat_gw0[0].id
   cidr           = var.vpc1_cidr
   floating_ip_id = huaweicloud_vpc_eip.eip_nat[0].id
@@ -478,12 +478,12 @@ resource "huaweicloud_er_instance" "er0_instance" {
 
 # VPC Attachments
 resource "huaweicloud_er_vpc_attachment" "er0_attach_vpc0" {
-  count                  = var.enable_enterprise_router ? 1 : 0
+  count                  = (var.enable_enterprise_router && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id            = huaweicloud_er_instance.er0_instance[0].id
   vpc_id                 = huaweicloud_vpc.vpc0_devrim.id
   subnet_id              = huaweicloud_vpc_subnet.snet_eric_vpc0[0].id
   name                   = local.er0_attach_vpc0
-  auto_create_vpc_routes = true
+  auto_create_vpc_routes = false
 }
 
 resource "huaweicloud_er_vpc_attachment" "er0_attach_vpc1" {
@@ -506,7 +506,7 @@ resource "huaweicloud_er_vpc_attachment" "er0_attach_vpc2" {
 
 # Route Tables
 resource "huaweicloud_er_route_table" "rtb0_er0" {
-  count       = var.enable_enterprise_router ? 1 : 0
+  count       = (var.enable_enterprise_router && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id = huaweicloud_er_instance.er0_instance[0].id
   name        = local.rtb0_er0
   description = "Route table for Alpha VPC"
@@ -528,7 +528,7 @@ resource "huaweicloud_er_route_table" "rtb2_er0" {
 
 # Associations - Link attachments to route tables
 resource "huaweicloud_er_association" "rtb0_assoc_vpc0" {
-  count          = var.enable_enterprise_router ? 1 : 0
+  count          = (var.enable_enterprise_router && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id    = huaweicloud_er_instance.er0_instance[0].id
   route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
   attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc0[0].id
@@ -551,14 +551,14 @@ resource "huaweicloud_er_association" "rtb2_assoc_vpc2" {
 # Propagations - Propagate routes from attachments to route tables
 # Alpha RTB learns routes from Beta and Network
 resource "huaweicloud_er_propagation" "rtb0_prop_vpc1" {
-  count          = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  count          = (var.enable_enterprise_router && var.enable_vpc_beta && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id    = huaweicloud_er_instance.er0_instance[0].id
   route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
   attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc1[0].id
 }
 
 resource "huaweicloud_er_propagation" "rtb0_prop_vpc2" {
-  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  count          = (var.enable_enterprise_router && var.enable_vpc_net && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id    = huaweicloud_er_instance.er0_instance[0].id
   route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
   attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
@@ -566,7 +566,7 @@ resource "huaweicloud_er_propagation" "rtb0_prop_vpc2" {
 
 # Beta RTB learns routes from Alpha and Network
 resource "huaweicloud_er_propagation" "rtb1_prop_vpc0" {
-  count          = var.enable_enterprise_router && var.enable_vpc_beta ? 1 : 0
+  count          = (var.enable_enterprise_router && var.enable_vpc_beta && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id    = huaweicloud_er_instance.er0_instance[0].id
   route_table_id = huaweicloud_er_route_table.rtb1_er0[0].id
   attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc0[0].id
@@ -581,7 +581,7 @@ resource "huaweicloud_er_propagation" "rtb1_prop_vpc2" {
 
 # Network RTB learns routes from Alpha and Beta
 resource "huaweicloud_er_propagation" "rtb2_prop_vpc0" {
-  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  count          = (var.enable_enterprise_router && var.enable_vpc_net && var.enable_snet_eric_vpc0) ? 1 : 0
   instance_id    = huaweicloud_er_instance.er0_instance[0].id
   route_table_id = huaweicloud_er_route_table.rtb2_er0[0].id
   attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc0[0].id
@@ -596,7 +596,7 @@ resource "huaweicloud_er_propagation" "rtb2_prop_vpc1" {
 
 # Static Route - Default route to Network VPC for internet egress via NAT
 resource "huaweicloud_er_static_route" "rtb0_default_to_net" {
-  count          = var.enable_enterprise_router && var.enable_vpc_net ? 1 : 0
+  count          = (var.enable_enterprise_router && var.enable_vpc_net && var.enable_snet_eric_vpc0) ? 1 : 0
   route_table_id = huaweicloud_er_route_table.rtb0_er0[0].id
   destination    = "0.0.0.0/0"
   attachment_id  = huaweicloud_er_vpc_attachment.er0_attach_vpc2[0].id
@@ -620,7 +620,7 @@ resource "huaweicloud_elb_loadbalancer" "elb0_basic" {
   ipv4_eip_id       = huaweicloud_vpc_eip.eip_elb0[0].id
 
   vpc_id         = huaweicloud_vpc.vpc0_devrim.id
-  ipv4_subnet_id = huaweicloud_vpc_subnet.snet_pub0_vpc0.id
+  ipv4_subnet_id = huaweicloud_vpc_subnet.snet_pub0_vpc0.ipv4_subnet_id
 
   l7_flavor_id = var.elb_l7_flavour
 

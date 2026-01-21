@@ -40,3 +40,7 @@ output "eip_ecs0_vpc0_id" {
 output "vpc0_eni_cce_ap0_ipv4_subnet_id" {
   value = huaweicloud_vpc_subnet.vpc0_eni_cce_ap0.ipv4_subnet_id
 }
+
+output "snet_pub0_vpc1_id" {
+  value = var.enable_vpc_beta ? huaweicloud_vpc_subnet.snet_pub0_vpc1[0].id : ""
+}

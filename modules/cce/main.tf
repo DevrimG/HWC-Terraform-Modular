@@ -103,7 +103,6 @@ resource "huaweicloud_cce_addon" "addon_metrics_server" {
   count         = (var.enable_cce_cluster && var.enable_cce_node_pool) ? 1 : 0
   cluster_id    = huaweicloud_cce_cluster.cce-cluster0[0].id
   template_name = "metrics-server"
-  version       = "1.3.90"
 
   depends_on = [huaweicloud_cce_node_pool.cce_spot_pool]
 }
@@ -129,9 +128,6 @@ resource "huaweicloud_cce_autopilot_cluster" "cce-cluster1" {
     subnets {
       subnet_id = var.cce_ap_eni_subnet_id
     }
-  }
-  authentication {
-    mode = "rbac"
   }
   extend_param {
     enterprise_project_id = var.enterprise_project_id
