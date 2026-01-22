@@ -97,7 +97,8 @@ module "cce" {
     module.network.vpc0_eni1_cce_ipv4_subnet_id
   ]
   cce_ap_eni_subnet_id = module.network.vpc0_eni_cce_ap0_ipv4_subnet_id
-  security_group_id    = module.network.secgroup_public0_id
+  security_group_id    = module.network.secgroup_cce_node_id
+  cce_eni_sg_id        = module.network.secgroup_cce_eni_id
 
   password = var.password
 
@@ -105,6 +106,17 @@ module "cce" {
   enable_cce_cluster   = var.enable_cce_cluster
   enable_cce_node_pool = var.enable_cce_node_pool
   enable_cce_autopilot = var.enable_cce_autopilot
+
+  # Rules Vars
+  vpc0_cidr          = var.vpc0_cidr
+  vpc1_cidr          = var.vpc1_cidr
+  vpc2_cidr          = var.vpc2_cidr
+  sg_internet        = var.sg_internet
+  sg_guest_ip        = var.sg_guest_ip
+  sg_vpn_ip          = var.sg_vpn_ip
+  enable_vpn_sg_rule = var.enable_vpn_sg_rule
+  my_ip              = module.network.my_ip
+  cce_eip_address    = module.network.eip_cce_address
 }
 
 module "compute" {

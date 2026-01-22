@@ -10,13 +10,15 @@ locals {
 }
 
 resource "huaweicloud_cce_cluster" "cce-cluster0" {
-  count           = var.enable_cce_cluster ? 1 : 0
-  name            = local.cce_cluster0_name
-  flavor_id       = var.cce_master_single
-  cluster_version = var.cce_version
-  vpc_id          = var.vpc_id
-  subnet_id       = var.subnet_id
-  hibernate       = false
+  count             = var.enable_cce_cluster ? 1 : 0
+  name              = local.cce_cluster0_name
+  flavor_id         = var.cce_master_single
+  cluster_version   = var.cce_version
+  vpc_id            = var.vpc_id
+  subnet_id         = var.subnet_id
+  hibernate         = false
+  security_group_id = var.cce_eni_sg_id
+  eip               = var.cce_eip_address
 
   tags = {
     Owner = var.name
@@ -95,6 +97,8 @@ resource "huaweicloud_cce_node_pool" "cce_spot_pool" {
     size       = 100
     volumetype = "SAS"
   }
+
+  pod_security_groups = [var.cce_eni_sg_id]
 }
 
 ### CCE Addons ###

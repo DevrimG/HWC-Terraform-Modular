@@ -15,8 +15,11 @@ locals {
   nacl_rule0_name = "nacl-rule_${var.name}-0"
   nacl_rule1_name = "nacl-rule-${var.name}-personal"
 
-  secgroup_nat0 = "sg-${var.name}-NAT"
-  secgroup_pub0 = "sg-${var.name}-pub"
+  secgroup_nat0        = "sg-${var.name}-NAT"
+  secgroup_pub0        = "sg-${var.name}-pub"
+  secgroup_cce_control = "sg-${var.name}-cce-control"
+  secgroup_cce_node    = "sg-${var.name}-cce-node"
+  secgroup_cce_eni     = "sg-${var.name}-cce-eni"
 
   natgw0_name = "natgw0-${var.name}"
 
@@ -201,96 +204,130 @@ resource "huaweicloud_networking_secgroup" "secgroup_public0" {
   # }
 }
 
+resource "huaweicloud_networking_secgroup" "secgroup_cce_control" {
+  name                  = local.secgroup_cce_control
+  description           = "CCE Control Plane Security Group"
+  enterprise_project_id = var.enterprise_project_id
+}
+
+resource "huaweicloud_networking_secgroup" "secgroup_cce_node" {
+  name                  = local.secgroup_cce_node
+  description           = "CCE Node Security Group"
+  enterprise_project_id = var.enterprise_project_id
+}
+
+resource "huaweicloud_networking_secgroup" "secgroup_cce_eni" {
+  name                  = local.secgroup_cce_eni
+  description           = "CCE ENI Security Group"
+  enterprise_project_id = var.enterprise_project_id
+}
+
+locals {
+  sg_targets = {
+    pub0        = huaweicloud_networking_secgroup.secgroup_public0.id
+    cce_control = huaweicloud_networking_secgroup.secgroup_cce_control.id
+    cce_node    = huaweicloud_networking_secgroup.secgroup_cce_node.id
+    cce_eni     = huaweicloud_networking_secgroup.secgroup_cce_eni.id
+  }
+}
+
 # allow ping
 resource "huaweicloud_networking_secgroup_rule" "allow_ping" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "icmp"
   remote_ip_prefix  = var.sg_internet
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
 }
 
 # allow https
 resource "huaweicloud_networking_secgroup_rule" "allow_https" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 443
   port_range_max    = 443
   remote_ip_prefix  = var.sg_internet
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
 }
 
 # allow personal-ip
 resource "huaweicloud_networking_secgroup_rule" "allow_personal" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 1
   port_range_max    = 65535
   remote_ip_prefix  = data.external.myip.result.ip
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
   description       = "Devrim's IP"
 }
 
 # allow office-ip
 resource "huaweicloud_networking_secgroup_rule" "allow_guest" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 22
   port_range_max    = 3389
   remote_ip_prefix  = var.sg_guest_ip
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
   description       = "Office's IP"
 }
 
 # allow vpn-ip
 resource "huaweicloud_networking_secgroup_rule" "allow_vpn" {
-  count             = var.enable_vpn_sg_rule ? 1 : 0
+  for_each          = var.enable_vpn_sg_rule ? local.sg_targets : {}
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 22
   port_range_max    = 3389
   remote_ip_prefix  = var.sg_vpn_ip
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
   description       = "P2C VPN Devrim's Client IP"
 }
 
 # allow vpc-alpha
 resource "huaweicloud_networking_secgroup_rule" "allow_vpc0" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 1
   port_range_max    = 65535
   remote_ip_prefix  = var.vpc0_cidr
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
   description       = "Alpha VPC CIDR"
 }
 
 # allow vpc-beta
 resource "huaweicloud_networking_secgroup_rule" "allow_vpc1" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 1
   port_range_max    = 65535
   remote_ip_prefix  = var.vpc1_cidr
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
   description       = "Beta VPC CIDR"
 }
 
 # allow vpc-net
 resource "huaweicloud_networking_secgroup_rule" "allow_vpc2" {
+  for_each          = local.sg_targets
   direction         = var.ingress
   ethertype         = var.ipv4
   protocol          = "tcp"
   port_range_min    = 1
   port_range_max    = 65535
   remote_ip_prefix  = var.vpc2_cidr
-  security_group_id = huaweicloud_networking_secgroup.secgroup_public0.id
+  security_group_id = each.value
   description       = "Network VPC CIDR"
 }
 

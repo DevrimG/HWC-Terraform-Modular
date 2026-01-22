@@ -58,6 +58,12 @@ variable "security_group_id" {
   default     = ""
 }
 
+variable "cce_eni_sg_id" {
+  description = "Security Group ID for CCE ENI"
+  type        = string
+  default     = ""
+}
+
 variable "password" {
   description = "Node Password"
   type        = string
@@ -97,3 +103,13 @@ variable "enable_cce_autopilot" {
   type    = bool
   default = false
 }
+
+variable "vpc0_cidr" { default = "" }
+variable "vpc1_cidr" { default = "" }
+variable "vpc2_cidr" { default = "" }
+variable "sg_internet" { default = "0.0.0.0/0" }
+variable "sg_guest_ip" { default = "" }
+variable "sg_vpn_ip" { default = "" }
+variable "enable_vpn_sg_rule" { default = false }
+variable "my_ip" { default = "" }
+variable "cce_eip_address" { default = "" }
