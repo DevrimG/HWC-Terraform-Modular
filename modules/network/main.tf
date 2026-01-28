@@ -384,7 +384,25 @@ resource "huaweicloud_vpc_eip" "eip_nat" {
   }
 }
 
+resource "huaweicloud_vpc_eip" "eip_nat_alpha" {
+  count                 = var.enable_eip_nat_alpha ? 1 : 0
+  name                  = "eip-${var.name}-${var.env}-NAT-Alpha"
+  enterprise_project_id = var.enterprise_project_id
+
+  publicip {
+    type = "5_bgp"
+  }
+
+  bandwidth {
+    name        = "bandwidth-${var.name}-${var.env}-NAT-Alpha"
+    size        = 300
+    share_type  = "PER"
+    charge_mode = "traffic"
+  }
+}
+
 resource "huaweicloud_vpc_eip" "eip_ecs0_vpc0" {
+  count                 = var.enable_eip_ecs_ubuntu ? 1 : 0
   name                  = "eip-${var.name}-${var.env}-ecs0"
   enterprise_project_id = var.enterprise_project_id
   # tags = {
@@ -659,6 +677,7 @@ resource "huaweicloud_elb_loadbalancer" "elb0_basic" {
   vpc_id         = huaweicloud_vpc.vpc0_devrim.id
   ipv4_subnet_id = huaweicloud_vpc_subnet.snet_pub0_vpc0.ipv4_subnet_id
 
+  l4_flavor_id = var.elb_l4_flavour
   l7_flavor_id = var.elb_l7_flavour
 
   availability_zone = [
@@ -667,4 +686,50 @@ resource "huaweicloud_elb_loadbalancer" "elb0_basic" {
   ]
 
   enterprise_project_id = var.enterprise_project_id
+}
+
+### NAT Gateway for VPC0 (Alpha) ###
+
+resource "huaweicloud_nat_gateway" "nat_gw_vpc0" {
+  count                 = var.enable_nat_gateway_alpha ? 1 : 0
+  name                  = "natgw-${var.name}-${var.env}-vpc0"
+  spec                  = "1"
+  vpc_id                = huaweicloud_vpc.vpc0_devrim.id
+  subnet_id             = huaweicloud_vpc_subnet.snet_pub0_vpc0.id
+  enterprise_project_id = var.enterprise_project_id
+}
+
+resource "huaweicloud_nat_snat_rule" "snat_vpc0_private" {
+  count          = (var.enable_nat_gateway_alpha && var.enable_eip_nat_alpha) ? 1 : 0
+  nat_gateway_id = huaweicloud_nat_gateway.nat_gw_vpc0[0].id
+  subnet_id      = huaweicloud_vpc_subnet.snet_pvt0_vpc0.id
+  floating_ip_id = huaweicloud_vpc_eip.eip_nat_alpha[0].id
+}
+
+resource "huaweicloud_nat_snat_rule" "snat_vpc0_eni0_cce" {
+  count          = (var.enable_nat_gateway_alpha && var.enable_eip_nat_alpha) ? 1 : 0
+  nat_gateway_id = huaweicloud_nat_gateway.nat_gw_vpc0[0].id
+  subnet_id      = huaweicloud_vpc_subnet.vpc0_eni0_cce.id
+  floating_ip_id = huaweicloud_vpc_eip.eip_nat_alpha[0].id
+}
+
+resource "huaweicloud_nat_snat_rule" "snat_vpc0_eni1_cce" {
+  count          = (var.enable_nat_gateway_alpha && var.enable_eip_nat_alpha) ? 1 : 0
+  nat_gateway_id = huaweicloud_nat_gateway.nat_gw_vpc0[0].id
+  subnet_id      = huaweicloud_vpc_subnet.vpc0_eni1_cce.id
+  floating_ip_id = huaweicloud_vpc_eip.eip_nat_alpha[0].id
+}
+
+resource "huaweicloud_nat_snat_rule" "snat_vpc0_eni_cce_ap0" {
+  count          = (var.enable_nat_gateway_alpha && var.enable_eip_nat_alpha) ? 1 : 0
+  nat_gateway_id = huaweicloud_nat_gateway.nat_gw_vpc0[0].id
+  subnet_id      = huaweicloud_vpc_subnet.vpc0_eni_cce_ap0.id
+  floating_ip_id = huaweicloud_vpc_eip.eip_nat_alpha[0].id
+}
+
+resource "huaweicloud_nat_snat_rule" "snat_snet_eric_vpc0" {
+  count          = (var.enable_nat_gateway_alpha && var.enable_eip_nat_alpha && var.enable_snet_eric_vpc0) ? 1 : 0
+  nat_gateway_id = huaweicloud_nat_gateway.nat_gw_vpc0[0].id
+  subnet_id      = huaweicloud_vpc_subnet.snet_eric_vpc0[0].id
+  floating_ip_id = huaweicloud_vpc_eip.eip_nat_alpha[0].id
 }

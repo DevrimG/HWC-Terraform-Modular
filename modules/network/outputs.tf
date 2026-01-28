@@ -31,10 +31,10 @@ output "secgroup_public0_id" {
 }
 
 output "eip_ecs0_vpc0_address" {
-  value = huaweicloud_vpc_eip.eip_ecs0_vpc0.address
+  value = join("", huaweicloud_vpc_eip.eip_ecs0_vpc0[*].address)
 }
 output "eip_ecs0_vpc0_id" {
-  value = huaweicloud_vpc_eip.eip_ecs0_vpc0.id
+  value = join("", huaweicloud_vpc_eip.eip_ecs0_vpc0[*].id)
 }
 
 output "vpc0_eni_cce_ap0_ipv4_subnet_id" {

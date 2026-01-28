@@ -79,6 +79,11 @@ module "network" {
   enable_enterprise_router = var.enable_enterprise_router
   enable_load_balancer     = var.enable_load_balancer
   enable_snet_eric_vpc0    = var.enable_snet_eric_vpc0
+  elb_l4_flavour           = var.elb_l4_flavour
+  elb_l7_flavour           = var.elb_l7_flavour
+  enable_nat_gateway_alpha = var.enable_nat_gateway_alpha
+  enable_eip_nat_alpha     = var.enable_eip_nat_alpha
+  enable_eip_ecs_ubuntu    = var.enable_eip_ecs_ubuntu
 
 }
 
@@ -135,9 +140,10 @@ module "compute" {
   eip_ecs0_vpc0_address = module.network.eip_ecs0_vpc0_address
 
   # Feature Flags
-  enable_ecs_ubuntu = var.enable_ecs_ubuntu
-  enable_ecs_beta   = var.enable_ecs_beta
-  enable_ecs_gpu    = var.enable_ecs_gpu
+  enable_ecs_ubuntu     = var.enable_ecs_ubuntu
+  enable_eip_ecs_ubuntu = var.enable_eip_ecs_ubuntu
+  enable_ecs_beta       = var.enable_ecs_beta
+  enable_ecs_gpu        = var.enable_ecs_gpu
 }
 
 module "database" {

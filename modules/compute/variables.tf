@@ -86,6 +86,11 @@ variable "enable_ecs_ubuntu" {
   type        = bool
   default     = false
 }
+variable "enable_eip_ecs_ubuntu" {
+  description = "Enable EIP for ECS Ubuntu"
+  type        = bool
+  default     = false
+}
 variable "enable_ecs_beta" {
   type    = bool
   default = false

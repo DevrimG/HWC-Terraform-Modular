@@ -50,12 +50,6 @@ resource "huaweicloud_cce_namespace" "backend" {
   name       = "backend"
 }
 
-resource "huaweicloud_cce_namespace" "agent-watch" {
-  count      = var.enable_cce_cluster ? 1 : 0
-  cluster_id = huaweicloud_cce_cluster.cce-cluster0[0].id
-  name       = "agent-watch"
-}
-
 
 
 data "huaweicloud_compute_flavors" "medium_flavour" {

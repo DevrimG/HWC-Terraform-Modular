@@ -57,7 +57,7 @@ resource "huaweicloud_compute_instance" "ecs0_vpc0" {
 }
 
 resource "huaweicloud_compute_eip_associate" "associated_vpc0" {
-  count = var.enable_ecs_ubuntu ? 1 : 0
+  count = (var.enable_ecs_ubuntu && var.enable_eip_ecs_ubuntu) ? 1 : 0
 
   public_ip   = var.eip_ecs0_vpc0_address
   instance_id = huaweicloud_compute_instance.ecs0_vpc0[0].id

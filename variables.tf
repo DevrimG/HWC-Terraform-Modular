@@ -431,6 +431,12 @@ variable "enable_eip_cce" {
   default     = false
 }
 
+variable "enable_eip_ecs_ubuntu" {
+  description = "Enable EIP for ECS Ubuntu"
+  type        = bool
+  default     = false
+}
+
 variable "enable_eip_cce_ap" {
   description = "Enable EIP for CCE Autopilot cluster"
   type        = bool
@@ -463,6 +469,18 @@ variable "enable_load_balancer" {
 
 variable "enable_snet_eric_vpc0" {
   description = "Enable Eric subnet for VPC0"
+  type        = bool
+  default     = false
+}
+
+variable "enable_nat_gateway_alpha" {
+  description = "Enable NAT Gateway for Alpha VPC (VPC0)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_eip_nat_alpha" {
+  description = "Enable EIP for Alpha VPC NAT Gateway"
   type        = bool
   default     = false
 }

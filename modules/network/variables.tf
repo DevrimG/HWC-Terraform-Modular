@@ -225,6 +225,12 @@ variable "enable_eip_ecs_vpc1" {
   default     = false
 }
 
+variable "enable_eip_ecs_ubuntu" {
+  description = "Enable EIP for ECS Ubuntu"
+  type        = bool
+  default     = false
+}
+
 variable "enable_eip_cce" {
   description = "Enable EIP for CCE cluster"
   type        = bool
@@ -267,8 +273,26 @@ variable "enable_snet_eric_vpc0" {
   default     = false
 }
 
+variable "elb_l4_flavour" {
+  description = "L4 Flavor ID for Network Load Balancer"
+  type        = string
+  default     = "abb6e65b-5478-433c-bdb1-25c0e1bd4289"
+}
+
 variable "elb_l7_flavour" {
-  description = "L7 Flavor ID for ELB"
+  description = "L7 Flavor ID for Application Load Balancer"
   type        = string
   default     = "9bae3ddd-f706-4707-b7aa-b2510482e448"
+}
+
+variable "enable_nat_gateway_alpha" {
+  description = "Enable NAT Gateway for Alpha VPC (VPC0)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_eip_nat_alpha" {
+  description = "Enable EIP for Alpha VPC NAT Gateway"
+  type        = bool
+  default     = false
 }
